@@ -3,7 +3,7 @@
 
   //save off default references
   var d3 = window.d3, topojson = window.topojson;
-  
+
   var defaultOptions = {
     scope: 'world',
     responsive: false,
@@ -95,7 +95,7 @@
       d3.select(this.options.element).style({'position': 'relative', 'padding-bottom': '60%'});
       d3.select(this.options.element).select('svg').style({'position': 'absolute', 'width': '100%', 'height': '100%'});
       d3.select(this.options.element).select('svg').select('g').selectAll('path').style('vector-effect', 'non-scaling-stroke');
-    
+
     }
 
     return this.svg;
@@ -107,7 +107,7 @@
     var height = options.height || element.offsetHeight;
     var projection, path;
     var svg = this.svg;
-    
+
     if ( options && typeof options.scope === 'undefined') {
       options.scope = 'world';
     }
@@ -192,7 +192,7 @@
         if ( datum && datum.fillKey ) {
           fillColor = fillData[ val(datum.fillKey, {data: colorCodeData[d.id], geography: d}) ];
         }
-        
+
         if ( typeof fillColor === 'undefined' ) {
           fillColor = val(datum && datum.fillColor, fillData.defaultFill, {data: colorCodeData[d.id], geography: d});
         }
@@ -253,7 +253,7 @@
           d3.selectAll('.datamaps-hoverover').style('display', 'none');
         });
     }
-    
+
     function moveToFront() {
       this.parentNode.appendChild(this);
     }
@@ -300,7 +300,7 @@
       this.svg.insert("path", '.datamaps-subunits')
         .datum(graticule)
         .attr("class", "datamaps-graticule")
-        .attr("d", this.path); 
+        .attr("d", this.path);
   }
 
   function handleArcs (layer, data, options) {
@@ -591,27 +591,33 @@
     }
   }
 
+
+  Datamap.prototype.setPathAndProjection = function(){
+    var options = this.options;
+    var pathAndProjection = options.setProjection.apply(this, [options.element, options] );
+
+    this.path = pathAndProjection.path;
+    this.projection = pathAndProjection.projection;
+  }
+
   // actually draw the features(states & countries)
   Datamap.prototype.draw = function() {
     //save off in a closure
     var self = this;
     var options = self.options;
 
-    //set projections and paths based on scope
-    var pathAndProjection = options.setProjection.apply(self, [options.element, options] );
-
-    this.path = pathAndProjection.path;
-    this.projection = pathAndProjection.projection;
-
     //if custom URL for topojson data, retrieve it and render
     if ( options.geographyConfig.dataUrl ) {
       d3.json( options.geographyConfig.dataUrl, function(error, results) {
         if ( error ) throw new Error(error);
         self.customTopo = results;
+
+        self.setPathAndProjection();
         draw( results );
       });
     }
     else {
+      self.setPathAndProjection();
       draw( this[options.scope + 'Topo'] || options.geographyConfig.dataJson);
     }
 
@@ -627,7 +633,7 @@
               var tmpData = {};
               for(var i = 0; i < data.length; i++) {
                 tmpData[data[i].id] = data[i];
-              } 
+              }
               data = tmpData;
             }
             Datamaps.prototype.updateChoropleth.call(self, data);
